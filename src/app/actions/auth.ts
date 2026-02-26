@@ -27,7 +27,7 @@ export async function authenticate(
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/",
+      redirectTo: "/dashboard",
     })
   } catch (error) {
     if (error instanceof AuthError) {

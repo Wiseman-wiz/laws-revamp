@@ -13,8 +13,8 @@ export default {
       if (!isLoggedIn && !isOnLoginPage) {
         return false // Redirect to login
       }
-      if (isLoggedIn && isOnLoginPage) {
-        return Response.redirect(new URL("/", nextUrl))
+      if (isLoggedIn && (isOnLoginPage || nextUrl.pathname === "/")) {
+        return Response.redirect(new URL("/dashboard", nextUrl))
       }
       return true
     },
