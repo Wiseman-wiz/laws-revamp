@@ -12,6 +12,7 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  Briefcase
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -26,14 +27,10 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { CaseType } from "@/types/case"
 
 // This is sample data.
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   teams: [
     {
       name: "Acme Inc",
@@ -51,7 +48,51 @@ const data = {
       plan: "Free",
     },
   ],
-  navMain: [
+  projects: [
+    {
+      name: "Design Engineering",
+      url: "#",
+      icon: Frame,
+    },
+    {
+      name: "Sales & Marketing",
+      url: "#",
+      icon: PieChart,
+    },
+    {
+      name: "Travel",
+      url: "#",
+      icon: Map,
+    },
+  ],
+}
+
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user?: User & { role?: string };
+  caseTypes?: CaseType[];
+}
+
+export function AppSidebar({ user, caseTypes = [], ...props }: AppSidebarProps) {
+  const sidebarUser = {
+    name: user?.name || "shadcn",
+    email: user?.email || "m@example.com",
+    avatar: user?.image || "/avatars/shadcn.jpg",
+  }
+
+  const caseTypeItems = caseTypes.map(ct => ({
+    title: ct.name,
+    url: `/cases/${ct.slug}`,
+  }));
+
+  // Add Manager link for supervisors
+  if (user?.role === "Supervisor") {
+    caseTypeItems.unshift({
+      title: "Case Type Manager",
+      url: "/case-types",
+    });
+  }
+
+  const navMain = [
     {
       title: "Playground",
       url: "#",
@@ -71,6 +112,13 @@ const data = {
           url: "#",
         },
       ],
+    },
+    {
+      title: "Case Types",
+      url: "#",
+      icon: Briefcase,
+      isActive: true,
+      items: caseTypeItems,
     },
     {
       title: "Models",
@@ -137,32 +185,7 @@ const data = {
         },
       ],
     },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
-}
-
-export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sidebar> & { user?: User }) {
-  const sidebarUser = {
-    name: user?.name || data.user.name,
-    email: user?.email || data.user.email,
-    avatar: user?.image || data.user.avatar,
-  }
+  ]
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -170,7 +193,7 @@ export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sideb
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
