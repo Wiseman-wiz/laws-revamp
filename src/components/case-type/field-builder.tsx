@@ -90,9 +90,15 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">Fields</h3>
-        <Button type="button" onClick={addField} size="sm" variant="outline">
-          <Plus className="mr-2 h-4 w-4" /> Add Field
+        <h3 className="text-xs font-bold uppercase text-muted-foreground">Fields</h3>
+        <Button
+          type="button"
+          onClick={addField}
+          size="sm"
+          variant="outline"
+          className="h-8 text-xs bg-white border-dashed"
+        >
+          <Plus className="mr-1 h-3 w-3" /> Add Field
         </Button>
       </div>
 
@@ -102,7 +108,7 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {fields.map((field) => (
               <SortableField
                 key={field.id}
@@ -116,8 +122,9 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
       </DndContext>
 
       {fields.length === 0 && (
-        <div className="text-center py-8 border-2 border-dashed rounded-lg text-muted-foreground">
-          No fields added yet. Click &quot;Add Field&quot; to start building your case type.
+        <div className="text-center py-10 border border-dashed rounded-lg text-muted-foreground bg-slate-50/30">
+          <p className="text-sm">No fields added yet.</p>
+          <p className="text-xs">Click &quot;Add Field&quot; to start building your form.</p>
         </div>
       )}
     </div>
@@ -151,17 +158,22 @@ function SortableField({
 
   return (
     <div ref={setNodeRef} style={style} className="group">
-      <Card className="shadow-sm">
-        <CardContent className="p-3 flex items-center gap-3">
-          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
-            <GripVertical className="h-5 w-5" />
+      <Card className="shadow-none border border-slate-200 hover:border-slate-300 transition-colors bg-white">
+        <CardContent className="p-3 flex items-center gap-4">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-400 p-1"
+          >
+            <GripVertical className="h-4 w-4" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 flex-1">
-            <div className="md:col-span-1">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 flex-1 items-center">
+            <div className="md:col-span-5">
               <Input
-                placeholder="Field Label"
+                placeholder="e.g. First Name"
                 value={field.label}
+                className="h-9 text-sm"
                 onChange={(e) => {
                   const label = e.target.value;
                   const key = label.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
@@ -169,15 +181,13 @@ function SortableField({
                 }}
               />
             </div>
-            <div className="md:col-span-1 text-xs text-muted-foreground flex items-center px-2">
-               <code>{field.key}</code>
-            </div>
-            <div className="md:col-span-1">
+
+            <div className="md:col-span-4">
               <Select
                 value={field.type}
                 onValueChange={(value) => onUpdate({ type: value as FieldType })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -190,9 +200,16 @@ function SortableField({
                 </SelectContent>
               </Select>
             </div>
-            <div className="md:col-span-1 flex items-center gap-2 justify-end">
+
+            <div className="md:col-span-3 flex items-center gap-1 justify-end">
                <FieldSettings field={field} onUpdate={onUpdate} />
-               <Button type="button" variant="ghost" size="icon" onClick={onRemove} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+               <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onRemove}
+                className="h-8 w-8 text-slate-400 hover:text-destructive hover:bg-destructive/5"
+               >
                  <Trash2 className="h-4 w-4" />
                </Button>
             </div>
@@ -225,7 +242,7 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
   return (
     <Dialog onOpenChange={(open) => { if(!open) handleSave() }}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600">
           <Settings2 className="h-4 w-4" />
         </Button>
       </DialogTrigger>
@@ -240,11 +257,11 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
               checked={field.required}
               onCheckedChange={(checked) => onUpdate({ required: !!checked })}
             />
-            <Label htmlFor={`req-${field.id}`}>Required</Label>
+            <Label htmlFor={`req-${field.id}`}>Required Field</Label>
           </div>
 
           <div className="space-y-2">
-            <Label>Layout (Grid Columns)</Label>
+            <Label className="text-xs font-bold uppercase text-muted-foreground">Layout</Label>
             <Select
               value={field.attributes.colSpan?.toString() || "1"}
               onValueChange={(value) => onUpdate({ attributes: { ...field.attributes, colSpan: parseInt(value) as 1 | 2 } })}
@@ -253,15 +270,15 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">1 Column</SelectItem>
-                <SelectItem value="2">2 Columns (Full Width)</SelectItem>
+                <SelectItem value="1">Half Width (1 Column)</SelectItem>
+                <SelectItem value="2">Full Width (2 Columns)</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {field.type === "text" && (
             <div className="space-y-2">
-              <Label>Max Length</Label>
+              <Label className="text-xs font-bold uppercase text-muted-foreground">Max Length</Label>
               <Input
                 type="number"
                 value={field.attributes.maxLength || ""}
@@ -272,9 +289,9 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
 
           {field.type === "dropdown" && (
             <div className="space-y-2">
-              <Label>Options (Label:Value per line)</Label>
+              <Label className="text-xs font-bold uppercase text-muted-foreground">Options (Label:Value per line)</Label>
               <textarea
-                className="w-full min-h-[100px] p-2 border rounded-md text-sm"
+                className="w-full min-h-[100px] p-2 border rounded-md text-sm focus:ring-1 focus:ring-slate-400 outline-none"
                 value={optionsText}
                 onChange={(e) => setOptionsText(e.target.value)}
                 placeholder="Option 1:opt1&#10;Option 2:opt2"
@@ -283,7 +300,7 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
           )}
 
           <div className="space-y-2">
-            <Label>Placeholder</Label>
+            <Label className="text-xs font-bold uppercase text-muted-foreground">Placeholder</Label>
             <Input
               value={field.attributes.placeholder || ""}
               onChange={(e) => onUpdate({ attributes: { ...field.attributes, placeholder: e.target.value } })}

@@ -19,6 +19,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldBuilder } from "./field-builder";
 import { useRouter } from "next/navigation";
 import { createCaseType, updateCaseType } from "@/app/actions/case-types";
+import { CaseTypePreview } from "./case-preview";
+import { Minus, Info } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -41,6 +43,8 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
       slug: initialData?.slug || "",
     },
   });
+
+  const watchName = form.watch("name");
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -68,68 +72,134 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>{initialData ? "Edit Case Type" : "Create New Case Type"}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Case Type Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g. Sales Lead"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            if (!initialData) {
-                              form.setValue("slug", e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""));
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="slug"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Slug</FormLabel>
-                      <FormControl>
-                        <Input placeholder="sales-lead" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+    <div className="max-w-[1400px] mx-auto py-8 px-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight">
+          {initialData ? "Edit Case Type" : "Create New Case Type"}
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          Define the properties and data fields for your new business process.
+        </p>
+      </div>
 
-              <div className="border-t pt-6">
-                <FieldBuilder fields={fields} onChange={setFields} />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column - Form Builder */}
+        <div className="lg:col-span-7">
+          <Card className="shadow-sm">
+            <CardHeader className="border-b pb-4">
+              <div className="flex items-center gap-2">
+                <Minus className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Form Builder
+                </CardTitle>
               </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-bold uppercase text-muted-foreground">
+                            Case Type Name
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. Sales Lead"
+                              className="bg-slate-50/50"
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                if (!initialData) {
+                                  form.setValue(
+                                    "slug",
+                                    e.target.value
+                                      .toLowerCase()
+                                      .replace(/\s+/g, "-")
+                                      .replace(/[^a-z0-9-]/g, "")
+                                  );
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="slug"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-bold uppercase text-muted-foreground">
+                            Slug
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="sales-lead"
+                              className="bg-slate-50/50"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <div className="flex justify-end gap-4">
-                <Button type="button" variant="outline" onClick={() => router.push("/case-types")} disabled={loading}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : initialData ? "Update Case Type" : "Create Case Type"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                  <div>
+                    <FieldBuilder fields={fields} onChange={setFields} />
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-6 border-t">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => router.push("/case-types")}
+                      disabled={loading}
+                      className="text-muted-foreground"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="bg-slate-900 text-white hover:bg-slate-800 px-6"
+                    >
+                      {loading
+                        ? "Saving..."
+                        : initialData
+                        ? "Update Case Type"
+                        : "Create Case Type"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+
+          {/* Pro Tip */}
+          <div className="mt-6 p-4 bg-blue-50/50 border border-blue-100 rounded-lg flex gap-3">
+            <div className="h-5 w-5 bg-blue-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+              <Info className="h-3 w-3 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-blue-900 mb-0.5">Pro Tip:</p>
+              <p className="text-xs text-blue-700 leading-relaxed">
+                Drag and drop fields to reorder. The preview on the right will update in real-time.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Live Preview */}
+        <div className="lg:col-span-5 sticky top-8">
+          <CaseTypePreview name={watchName} fields={fields} />
+        </div>
+      </div>
     </div>
   );
 }

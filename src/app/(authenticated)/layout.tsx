@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { getCaseTypes } from "@/app/actions/case-types";
 import { redirect } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from "@/components/ui/breadcrumb";
+import { DynamicBreadcrumbs } from "@/components/dynamic-breadcrumbs";
 
 export default async function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -30,13 +30,7 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
               orientation="vertical"
               className="mx-2 data-[orientation=vertical]:h-4"
             />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+            <DynamicBreadcrumbs />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
