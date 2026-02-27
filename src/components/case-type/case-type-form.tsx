@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { createCaseType, updateCaseType } from "@/app/actions/case-types";
 import { CaseTypePreview } from "./case-preview";
 import { Minus, Info } from "lucide-react";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -45,6 +46,18 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
   });
 
   const watchName = form.watch("name");
+  const watchSlug = form.watch("slug");
+
+  const handleCancel = () => {
+    const hasData = watchName.length > 0 || watchSlug.length > 0 || fields.length > 0;
+    if (hasData) {
+      if (confirm("You have unsaved changes. Are you sure you want to cancel?")) {
+        router.push("/case-types");
+      }
+    } else {
+      router.push("/case-types");
+    }
+  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -53,7 +66,9 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
       // Validate fields
       const invalidFields = fields.filter(f => !f.label || f.label.trim() === "");
       if (invalidFields.length > 0) {
-        throw new Error("All field names must be filled out and cannot be only spaces.");
+        toast.error("All field names must be filled out and cannot be only spaces.");
+        setLoading(false);
+        return;
       }
 
       const data = {
@@ -63,8 +78,10 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
 
       if (initialData?._id) {
         await updateCaseType(initialData._id.toString(), data);
+        toast.success("Case type updated successfully");
       } else {
         await createCaseType(data);
+        toast.success("Case type created successfully");
       }
 
       router.push("/case-types");
@@ -72,7 +89,7 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
     } catch (error: unknown) {
       console.error(error);
       const message = error instanceof Error ? error.message : "An error occurred";
-      alert(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -91,7 +108,7 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
         {/* Left Column - Form Builder */}
-        <div className="xl:col-span-7">
+        <div className="xl:col-span-5">
           <Card className="shadow-sm">
             <CardHeader className="border-b pb-4">
               <div className="flex items-center gap-2">
@@ -165,7 +182,7 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
                     <Button
                       type="button"
                       variant="ghost"
-                      onClick={() => router.push("/case-types")}
+                      onClick={handleCancel}
                       disabled={loading}
                       className="text-muted-foreground"
                     >
@@ -173,7 +190,7 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={loading}
+                      disabled={loading || fields.length < 1}
                       className="bg-slate-900 text-white hover:bg-slate-800 px-6"
                     >
                       {loading
@@ -203,7 +220,7 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
         </div>
 
         {/* Right Column - Live Preview */}
-        <div className="xl:col-span-5 sticky top-[100px]">
+        <div className="xl:col-span-7 sticky top-[100px]">
           <CaseTypePreview name={watchName} fields={fields} />
         </div>
       </div>
