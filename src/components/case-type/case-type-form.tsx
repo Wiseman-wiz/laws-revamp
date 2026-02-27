@@ -49,6 +49,13 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setLoading(true);
+
+      // Validate fields
+      const invalidFields = fields.filter(f => !f.label || f.label.trim() === "");
+      if (invalidFields.length > 0) {
+        throw new Error("All field names must be filled out and cannot be only spaces.");
+      }
+
       const data = {
         ...values,
         fields,

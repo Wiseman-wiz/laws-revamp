@@ -31,7 +31,8 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { GripVertical, Trash2, Plus, Settings2 } from "lucide-react";
+import { GripVertical, Trash2, Plus, Settings2, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -140,6 +141,7 @@ function SortableField({
   onRemove: () => void;
   onUpdate: (updates: Partial<CaseField>) => void;
 }) {
+  const isInvalid = !field.label || field.label.trim() === "";
   const {
     attributes,
     listeners,
@@ -169,17 +171,25 @@ function SortableField({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3 flex-1 items-center">
-            <div className="md:col-span-5">
+            <div className="md:col-span-5 relative">
               <Input
                 placeholder="e.g. First Name"
                 value={field.label}
-                className="h-9 text-sm"
+                className={cn(
+                  "h-9 text-sm",
+                  isInvalid && "border-destructive focus-visible:ring-destructive pr-8"
+                )}
                 onChange={(e) => {
                   const label = e.target.value;
                   const key = label.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
                   onUpdate({ label, key });
                 }}
               />
+              {isInvalid && (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-destructive">
+                   <AlertCircle className="h-4 w-4" />
+                </div>
+              )}
             </div>
 
             <div className="md:col-span-4">
