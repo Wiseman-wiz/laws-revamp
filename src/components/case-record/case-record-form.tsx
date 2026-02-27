@@ -97,7 +97,7 @@ export function CaseRecordForm({ caseType }: CaseRecordFormProps) {
   };
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="w-full max-w-full mx-auto">
       <CardHeader>
         <CardTitle>New {caseType.name}</CardTitle>
       </CardHeader>

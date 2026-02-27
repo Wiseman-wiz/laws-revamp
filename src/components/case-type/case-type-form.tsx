@@ -72,7 +72,7 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto py-8 px-6">
+    <div className="w-full max-w-full mx-auto py-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">
           {initialData ? "Edit Case Type" : "Create New Case Type"}
@@ -82,9 +82,9 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
         {/* Left Column - Form Builder */}
-        <div className="lg:col-span-7">
+        <div className="xl:col-span-7">
           <Card className="shadow-sm">
             <CardHeader className="border-b pb-4">
               <div className="flex items-center gap-2">
@@ -196,7 +196,7 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
         </div>
 
         {/* Right Column - Live Preview */}
-        <div className="lg:col-span-5 sticky top-8">
+        <div className="xl:col-span-5 sticky top-[100px]">
           <CaseTypePreview name={watchName} fields={fields} />
         </div>
       </div>
