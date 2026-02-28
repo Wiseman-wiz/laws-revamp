@@ -41,11 +41,16 @@ export function CaseTypePreview({ name, fields }: CaseTypePreviewProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {fields.map((field) => (
             <div
               key={field.id}
-              className={field.attributes.colSpan === 2 ? "md:col-span-2" : "md:col-span-1"}
+              className={
+                field.attributes.colSpan === 4 ? "md:col-span-4" :
+                field.attributes.colSpan === 3 ? "md:col-span-3" :
+                field.attributes.colSpan === 2 ? "md:col-span-2" :
+                "md:col-span-1"
+              }
             >
               <Label className="text-sm font-medium mb-1.5 block">
                 {field.label || "Untitled Field"}

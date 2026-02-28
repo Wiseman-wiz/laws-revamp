@@ -274,14 +274,16 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
             <Label className="text-xs font-bold uppercase text-muted-foreground">Layout</Label>
             <Select
               value={field.attributes.colSpan?.toString() || "1"}
-              onValueChange={(value) => onUpdate({ attributes: { ...field.attributes, colSpan: parseInt(value) as 1 | 2 } })}
+              onValueChange={(value) => onUpdate({ attributes: { ...field.attributes, colSpan: parseInt(value) as 1 | 2 | 3 | 4 } })}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Half Width (1 Column)</SelectItem>
-                <SelectItem value="2">Full Width (2 Columns)</SelectItem>
+                <SelectItem value="1">1 Column (1/4)</SelectItem>
+                <SelectItem value="2">2 Columns (Half)</SelectItem>
+                <SelectItem value="3">3 Columns (3/4)</SelectItem>
+                <SelectItem value="4">4 Columns (Full)</SelectItem>
               </SelectContent>
             </Select>
           </div>

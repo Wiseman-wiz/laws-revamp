@@ -16,7 +16,7 @@ export interface CaseField {
   options: CaseFieldOption[] | null;
   attributes: {
     maxLength?: number;
-    colSpan?: 1 | 2;
+    colSpan?: 1 | 2 | 3 | 4;
     placeholder?: string;
     [key: string]: string | number | boolean | undefined;
   };
