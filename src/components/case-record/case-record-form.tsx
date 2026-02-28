@@ -97,21 +97,26 @@ export function CaseRecordForm({ caseType }: CaseRecordFormProps) {
   };
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="w-full max-w-full mx-auto">
       <CardHeader>
         <CardTitle>New {caseType.name}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {caseType.fields.map((field) => (
                 <FormField
                   key={field.id}
                   control={form.control}
                   name={field.key}
                   render={({ field: formField }) => (
-                    <FormItem className={field.attributes.colSpan === 2 ? "md:col-span-2" : "md:col-span-1"}>
+                    <FormItem className={
+                      field.attributes.colSpan === 4 ? "md:col-span-4" :
+                      field.attributes.colSpan === 3 ? "md:col-span-3" :
+                      field.attributes.colSpan === 2 ? "md:col-span-2" :
+                      "md:col-span-1"
+                    }>
                       <FormLabel>{field.label} {field.required && <span className="text-destructive">*</span>}</FormLabel>
                       <FormControl>
                         {field.type === "dropdown" ? (

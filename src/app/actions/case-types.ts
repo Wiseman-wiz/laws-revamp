@@ -37,6 +37,22 @@ export async function getCaseTypeBySlug(slug: string) {
   } as CaseType;
 }
 
+export async function getCaseTypeById(id: string) {
+  const client = await clientPromise;
+  const db = client.db();
+
+  try {
+    const caseType = await db.collection("case_types").findOne({ _id: new ObjectId(id) });
+    if (!caseType) return null;
+    return {
+      ...caseType,
+      _id: caseType._id.toString(),
+    } as CaseType;
+  } catch {
+    return null;
+  }
+}
+
 export async function hasCaseRecords(caseTypeId: string) {
   const client = await clientPromise;
   const db = client.db();
