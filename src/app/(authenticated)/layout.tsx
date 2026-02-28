@@ -33,7 +33,7 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
             <DynamicBreadcrumbs caseTypes={caseTypes} />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-6 w-full max-w-full">
+        <div className="flex flex-1 flex-col gap-4 p-4 w-full max-w-full">
           {children}
         </div>
       </SidebarInset>

@@ -115,7 +115,7 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
   };
 
   return (
-    <div className="w-full max-w-full mx-auto py-4">
+    <div className="w-full max-w-full mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">
           {initialData ? "Edit Case Type" : "Create New Case Type"}
