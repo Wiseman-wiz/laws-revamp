@@ -13,6 +13,7 @@ import {
   DragStartEvent,
   defaultDropAnimationSideEffects,
 } from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   SortableContext,
@@ -99,6 +100,7 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
     <DndContext
       id="field-builder-dnd"
       sensors={sensors}
+      modifiers={[restrictToVerticalAxis]}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
@@ -367,6 +369,7 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
               <DndContext
                 id="options-dnd"
                 sensors={sensors}
+                modifiers={[restrictToVerticalAxis]}
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragEnd={handleOptionsDragEnd}
@@ -395,12 +398,13 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
                   }),
                 }}>
                   {activeId ? (
-                    <div className="bg-white border rounded-md shadow-lg p-2 flex items-center gap-2 w-[calc(100%-1rem)]">
+                    <div className="bg-white border rounded-md shadow-lg p-3 flex items-center gap-2 w-full max-w-[calc(100%-24px)] pointer-events-none">
                       <GripVertical className="h-4 w-4 text-slate-400" />
                       <div className="grid grid-cols-2 gap-2 flex-1">
-                        <Input disabled value={localOptions.find(o => o.id === activeId)?.label} className="h-9 text-xs" />
-                        <Input disabled value={localOptions.find(o => o.id === activeId)?.value} className="h-9 text-xs" />
+                        <Input readOnly value={localOptions.find(o => o.id === activeId)?.label} className="h-9 text-xs bg-slate-50" />
+                        <Input readOnly value={localOptions.find(o => o.id === activeId)?.value} className="h-9 text-xs bg-slate-50" />
                       </div>
+                      <div className="w-8" /> {/* Placeholder for trash icon space */}
                     </div>
                   ) : null}
                 </DragOverlay>
