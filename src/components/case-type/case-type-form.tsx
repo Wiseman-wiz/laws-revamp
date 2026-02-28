@@ -80,6 +80,16 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
         return;
       }
 
+      // Validate dropdown options
+      const fieldsWithInvalidOptions = fields.filter(f =>
+        f.type === "dropdown" && (!f.options || f.options.length === 0 || f.options.some(opt => !opt.label.trim() || !opt.value.trim()))
+      );
+      if (fieldsWithInvalidOptions.length > 0) {
+        toast.error("All dropdown fields must have at least one valid option (label and value).");
+        setLoading(false);
+        return;
+      }
+
       const data = {
         ...values,
         fields,

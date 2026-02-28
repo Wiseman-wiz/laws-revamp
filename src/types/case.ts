@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 export type FieldType = "text" | "number" | "dropdown" | "date" | "checkbox" | "textarea";
 
 export interface CaseFieldOption {
+  id: string;
   label: string;
   value: string;
 }
