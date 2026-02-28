@@ -8,6 +8,7 @@ import { compare } from "bcryptjs"
 import { UserRole } from "./types/next-auth"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   adapter: MongoDBAdapter(clientPromise),
   session: { strategy: "jwt" },
   ...authConfig,
