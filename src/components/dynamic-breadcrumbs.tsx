@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import { usePathname } from "next/navigation";
 import {
   Breadcrumb,
@@ -10,82 +10,75 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { getCaseTypeBySlug, getCaseTypeById } from "@/app/actions/case-types";
+import { CaseType } from "@/types/case";
 
-export function DynamicBreadcrumbs() {
+interface DynamicBreadcrumbsProps {
+  caseTypes: CaseType[];
+}
+
+export function DynamicBreadcrumbs({ caseTypes }: DynamicBreadcrumbsProps) {
   const pathname = usePathname();
-  const [breadcrumbs, setBreadcrumbs] = useState<{ label: string; href: string; isCurrent: boolean }[]>([]);
 
-  useEffect(() => {
-    const generateBreadcrumbs = async () => {
-      const paths = pathname.split("/").filter((path) => path !== "");
-      const crumbs: { label: string; href: string; isCurrent: boolean }[] = [];
+  const breadcrumbs = useMemo(() => {
+    const paths = pathname.split("/").filter((path) => path !== "");
+    const crumbs: { label: string; href: string; isCurrent: boolean }[] = [];
 
-      // Always start with Dashboard if we're in an authenticated route
-      crumbs.push({ label: "Dashboard", href: "/dashboard", isCurrent: pathname === "/dashboard" });
+    // Always start with Dashboard
+    crumbs.push({
+      label: "Dashboard",
+      href: "/dashboard",
+      isCurrent: pathname === "/dashboard"
+    });
 
-      let currentHref = "";
+    let currentHref = "";
 
-      for (let i = 0; i < paths.length; i++) {
-        const path = paths[i];
+    for (let i = 0; i < paths.length; i++) {
+      const path = paths[i];
+      if (path === "dashboard") continue;
 
-        // Skip 'dashboard' as we added it manually
-        if (path === "dashboard") continue;
+      currentHref += `/${path}`;
+      const isLast = i === paths.length - 1;
 
-        currentHref += `/${path}`;
-        const isLast = i === paths.length - 1;
+      let label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
 
-        let label = path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
+      // Static overrides
+      if (path === "case-types") label = "Case Types";
+      if (path === "cases") label = "Cases";
+      if (path === "new") label = "New";
+      if (path === "edit") label = "Edit";
 
-        // Custom labels for specific routes
-        if (path === "case-types") label = "Case Types";
-        if (path === "cases") label = "Cases";
-        if (path === "new") label = "New";
-        if (path === "edit") label = "Edit";
-
-        // Try to fetch real name for dynamic segments
-        if (i > 0) {
-          const prevPath = paths[i - 1];
-          if (prevPath === "cases") {
-            try {
-              const caseType = await getCaseTypeBySlug(path);
-              if (caseType) label = caseType.name;
-            } catch {
-              // Ignore fetch errors
-            }
-          } else if (prevPath === "case-types" && path !== "new") {
-            try {
-              const caseType = await getCaseTypeById(path);
-              if (caseType) label = caseType.name;
-            } catch {
-              // Ignore fetch errors
-            }
-          }
+      // Synchronous resolution from pre-fetched caseTypes
+      if (i > 0) {
+        const prevPath = paths[i - 1];
+        if (prevPath === "cases") {
+          const caseType = caseTypes.find(ct => ct.slug === path);
+          if (caseType) label = caseType.name;
+        } else if (prevPath === "case-types" && path !== "new") {
+          const caseType = caseTypes.find(ct => ct._id?.toString() === path);
+          if (caseType) label = caseType.name;
         }
-
-        crumbs.push({
-          label,
-          href: currentHref,
-          isCurrent: isLast,
-        });
       }
 
-      setBreadcrumbs(crumbs);
-    };
+      crumbs.push({
+        label,
+        href: currentHref,
+        isCurrent: isLast,
+      });
+    }
 
-    generateBreadcrumbs();
-  }, [pathname]);
+    return crumbs;
+  }, [pathname, caseTypes]);
 
   if (breadcrumbs.length <= 1 && pathname === "/dashboard") {
-     return (
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbPage>Dashboard</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-     );
+    return (
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbPage>Dashboard</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
   }
 
   return (

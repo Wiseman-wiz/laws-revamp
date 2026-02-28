@@ -30,7 +30,7 @@ export default async function AuthenticatedLayout({ children }: { children: Reac
               orientation="vertical"
               className="mx-2 data-[orientation=vertical]:h-4"
             />
-            <DynamicBreadcrumbs />
+            <DynamicBreadcrumbs caseTypes={caseTypes} />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-6 w-full max-w-full">
