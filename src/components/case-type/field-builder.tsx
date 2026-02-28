@@ -9,6 +9,9 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  defaultDropAnimationSideEffects,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -49,7 +52,11 @@ interface FieldBuilderProps {
 
 export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -89,6 +96,12 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
   };
 
   return (
+    <DndContext
+      id="field-builder-dnd"
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-xs font-bold uppercase text-muted-foreground">Fields</h3>
@@ -103,11 +116,6 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
         </Button>
       </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
         <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-3">
             {fields.map((field) => (
@@ -120,7 +128,6 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
             ))}
           </div>
         </SortableContext>
-      </DndContext>
 
       {fields.length === 0 && (
         <div className="text-center py-10 border border-dashed rounded-lg text-muted-foreground bg-slate-50/30">
@@ -129,6 +136,7 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
         </div>
       )}
     </div>
+    </DndContext>
   );
 }
 
@@ -232,21 +240,38 @@ function SortableField({
 
 function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updates: Partial<CaseField>) => void }) {
   const [localOptions, setLocalOptions] = React.useState<CaseFieldOption[]>(field.options || []);
+  const [activeId, setActiveId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    setLocalOptions(field.options || []);
+  }, [field.options]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id.toString());
+  };
 
   const handleOptionsDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndex = localOptions.findIndex((o) => o.id === active.id);
       const newIndex = localOptions.findIndex((o) => o.id === over.id);
-      setLocalOptions(arrayMove(localOptions, oldIndex, newIndex));
+      const newOptions = arrayMove(localOptions, oldIndex, newIndex);
+      setLocalOptions(newOptions);
+      // Immediately update parent to avoid sync issues
+      onUpdate({ options: newOptions });
     }
+    setActiveId(null);
   };
 
   const addOption = () => {
@@ -339,9 +364,16 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
                 </Button>
               </div>
 
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleOptionsDragEnd}>
+              <DndContext
+                id="options-dnd"
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleOptionsDragEnd}
+                onDragCancel={() => setActiveId(null)}
+              >
                 <SortableContext items={localOptions.map(o => o.id)} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                  <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin">
                     {localOptions.map((option) => (
                       <SortableOption
                         key={option.id}
@@ -353,6 +385,25 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
                     ))}
                   </div>
                 </SortableContext>
+                <DragOverlay dropAnimation={{
+                  sideEffects: defaultDropAnimationSideEffects({
+                    styles: {
+                      active: {
+                        opacity: '0.5',
+                      },
+                    },
+                  }),
+                }}>
+                  {activeId ? (
+                    <div className="bg-white border rounded-md shadow-lg p-2 flex items-center gap-2 w-[calc(100%-1rem)]">
+                      <GripVertical className="h-4 w-4 text-slate-400" />
+                      <div className="grid grid-cols-2 gap-2 flex-1">
+                        <Input disabled value={localOptions.find(o => o.id === activeId)?.label} className="h-9 text-xs" />
+                        <Input disabled value={localOptions.find(o => o.id === activeId)?.value} className="h-9 text-xs" />
+                      </div>
+                    </div>
+                  ) : null}
+                </DragOverlay>
               </DndContext>
 
               {localOptions.length === 0 && (
