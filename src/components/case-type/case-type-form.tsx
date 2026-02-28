@@ -22,6 +22,16 @@ import { createCaseType, updateCaseType } from "@/app/actions/case-types";
 import { CaseTypePreview } from "./case-preview";
 import { Minus, Info } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -47,13 +57,12 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
 
   const watchName = form.watch("name");
   const watchSlug = form.watch("slug");
+  const [showCancelDialog, setShowCancelDialog] = React.useState(false);
 
-  const handleCancel = () => {
+  const handleCancelClick = () => {
     const hasData = watchName.length > 0 || watchSlug.length > 0 || fields.length > 0;
     if (hasData) {
-      if (confirm("You have unsaved changes. Are you sure you want to cancel?")) {
-        router.push("/case-types");
-      }
+      setShowCancelDialog(true);
     } else {
       router.push("/case-types");
     }
@@ -179,15 +188,34 @@ export function CaseTypeForm({ initialData }: CaseTypeFormProps) {
                   </div>
 
                   <div className="flex justify-end gap-3 pt-6 border-t">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={handleCancel}
-                      disabled={loading}
-                      className="text-muted-foreground"
-                    >
-                      Cancel
-                    </Button>
+                    <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={handleCancelClick}
+                        disabled={loading}
+                        className="text-muted-foreground"
+                      >
+                        Cancel
+                      </Button>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure you want to cancel?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            You have unsaved changes. Canceling will discard all your progress in this form.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Keep Editing</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => router.push("/case-types")}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Discard Changes
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                     <Button
                       type="submit"
                       disabled={loading || fields.length < 1}
