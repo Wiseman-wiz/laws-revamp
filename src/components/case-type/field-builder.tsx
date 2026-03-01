@@ -13,7 +13,7 @@ import {
   DragStartEvent,
   defaultDropAnimationSideEffects,
 } from "@dnd-kit/core";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { restrictToVerticalAxis, restrictToWindowEdges } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   SortableContext,
@@ -52,6 +52,7 @@ interface FieldBuilderProps {
 }
 
 export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
+  const [activeId, setActiveId] = React.useState<string | null>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -63,6 +64,10 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
     })
   );
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id.toString());
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -71,6 +76,7 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
       const newIndex = fields.findIndex((f) => f.id === over.id);
       onChange(arrayMove(fields, oldIndex, newIndex));
     }
+    setActiveId(null);
   };
 
   const addField = () => {
@@ -96,29 +102,33 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
     onChange(fields.map((f) => (f.id === id ? { ...f, ...updates } : f)));
   };
 
+  const activeField = fields.find((f) => f.id === activeId);
+
   return (
     <DndContext
       id="field-builder-dnd"
       sensors={sensors}
       modifiers={[restrictToVerticalAxis]}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveId(null)}
     >
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold uppercase text-muted-foreground">Fields</h3>
-        <Button
-          type="button"
-          onClick={addField}
-          size="sm"
-          variant="outline"
-          className="h-8 text-xs bg-white border-dashed"
-        >
-          <Plus className="mr-1 h-3 w-3" /> Add Field
-        </Button>
-      </div>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-bold uppercase text-muted-foreground">Fields</h3>
+          <Button
+            type="button"
+            onClick={addField}
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs bg-white border-dashed"
+          >
+            <Plus className="mr-1 h-3 w-3" /> Add Field
+          </Button>
+        </div>
 
-        <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-3">
             {fields.map((field) => (
               <SortableField
@@ -131,13 +141,37 @@ export function FieldBuilder({ fields, onChange }: FieldBuilderProps) {
           </div>
         </SortableContext>
 
-      {fields.length === 0 && (
-        <div className="text-center py-10 border border-dashed rounded-lg text-muted-foreground bg-slate-50/30">
-          <p className="text-sm">No fields added yet.</p>
-          <p className="text-xs">Click &quot;Add Field&quot; to start building your form.</p>
-        </div>
-      )}
-    </div>
+        <DragOverlay modifiers={[restrictToVerticalAxis]}>
+          {activeField ? (
+            <div className="w-full opacity-80">
+               <Card className="shadow-xl border-blue-500 bg-white">
+                <CardContent className="p-3 flex items-center gap-4">
+                  <div className="text-blue-500 p-1">
+                    <GripVertical className="h-4 w-4" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 flex-1 items-center">
+                    <div className="md:col-span-5">
+                      <Input readOnly value={activeField.label} className="h-9 text-sm bg-slate-50" />
+                    </div>
+                    <div className="md:col-span-4">
+                       <div className="h-9 px-3 flex items-center text-sm bg-slate-50 border rounded-md">
+                         {activeField.type.charAt(0).toUpperCase() + activeField.type.slice(1)}
+                       </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : null}
+        </DragOverlay>
+
+        {fields.length === 0 && (
+          <div className="text-center py-10 border border-dashed rounded-lg text-muted-foreground bg-slate-50/30">
+            <p className="text-sm">No fields added yet.</p>
+            <p className="text-xs">Click &quot;Add Field&quot; to start building your form.</p>
+          </div>
+        )}
+      </div>
     </DndContext>
   );
 }
@@ -162,10 +196,10 @@ function SortableField({
   } = useSortable({ id: field.id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
     zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.3 : 1,
   };
 
   return (
@@ -296,8 +330,6 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
   const handleSave = () => {
     const updates: Partial<CaseField> = {};
     if (field.type === "dropdown") {
-      // Validate options - filter out completely empty ones or keep them to show errors?
-      // User said "add validations", so I should probably keep them and prevent closing if invalid.
       updates.options = localOptions.length > 0 ? localOptions : null;
     }
     onUpdate(updates);
@@ -305,6 +337,8 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
 
   const isOptionInvalid = (opt: CaseFieldOption) => !opt.label.trim() || !opt.value.trim();
   const hasInvalidOptions = localOptions.some(isOptionInvalid);
+
+  const activeOption = localOptions.find(o => o.id === activeId);
 
   return (
     <Dialog onOpenChange={(open) => { if(!open && !hasInvalidOptions) handleSave() }}>
@@ -369,7 +403,7 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
               <DndContext
                 id="options-dnd"
                 sensors={sensors}
-                modifiers={[restrictToVerticalAxis]}
+                modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragEnd={handleOptionsDragEnd}
@@ -388,23 +422,30 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
                     ))}
                   </div>
                 </SortableContext>
-                <DragOverlay dropAnimation={{
-                  sideEffects: defaultDropAnimationSideEffects({
-                    styles: {
-                      active: {
-                        opacity: '0.5',
+                <DragOverlay
+                  modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+                  dropAnimation={{
+                    sideEffects: defaultDropAnimationSideEffects({
+                      styles: {
+                        active: {
+                          opacity: '0.4',
+                        },
                       },
-                    },
-                  }),
-                }}>
-                  {activeId ? (
-                    <div className="bg-white border rounded-md shadow-lg p-3 flex items-center gap-2 w-full max-w-[calc(100%-24px)] pointer-events-none">
+                    }),
+                  }}
+                >
+                  {activeOption ? (
+                    <div className="bg-white border border-slate-200 rounded-md shadow-xl p-3 flex items-center gap-2 w-[calc(448px-48px)] max-w-full pointer-events-none">
                       <GripVertical className="h-4 w-4 text-slate-400" />
                       <div className="grid grid-cols-2 gap-2 flex-1">
-                        <Input readOnly value={localOptions.find(o => o.id === activeId)?.label} className="h-9 text-xs bg-slate-50" />
-                        <Input readOnly value={localOptions.find(o => o.id === activeId)?.value} className="h-9 text-xs bg-slate-50" />
+                        <div className="h-9 px-3 flex items-center text-xs bg-slate-50 border rounded-md truncate">
+                          {activeOption.label || "Label"}
+                        </div>
+                        <div className="h-9 px-3 flex items-center text-xs bg-slate-50 border rounded-md truncate">
+                          {activeOption.value || "Value"}
+                        </div>
                       </div>
-                      <div className="w-8" /> {/* Placeholder for trash icon space */}
+                      <div className="w-8" />
                     </div>
                   ) : null}
                 </DragOverlay>
@@ -464,16 +505,18 @@ function SortableOption({
     setNodeRef,
     transform,
     transition,
+    isDragging,
   } = useSortable({ id: option.id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
+    opacity: isDragging ? 0.3 : 1,
   };
 
   return (
     <div ref={setNodeRef} style={style} className="flex items-center gap-2">
-      <div {...attributes} {...listeners} className="cursor-grab text-slate-300 hover:text-slate-400">
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-400 p-1">
         <GripVertical className="h-4 w-4" />
       </div>
       <div className="grid grid-cols-2 gap-2 flex-1">
@@ -481,13 +524,13 @@ function SortableOption({
           placeholder="Label"
           value={option.label}
           onChange={(e) => onUpdate({ label: e.target.value })}
-          className={cn("h-9 text-xs", isInvalid && !option.label.trim() && "border-destructive focus-visible:ring-destructive")}
+          className={cn("h-9 text-xs bg-white", isInvalid && !option.label.trim() && "border-destructive focus-visible:ring-destructive")}
         />
         <Input
           placeholder="Value"
           value={option.value}
           onChange={(e) => onUpdate({ value: e.target.value })}
-          className={cn("h-9 text-xs", isInvalid && !option.value.trim() && "border-destructive focus-visible:ring-destructive")}
+          className={cn("h-9 text-xs bg-white", isInvalid && !option.value.trim() && "border-destructive focus-visible:ring-destructive")}
         />
       </div>
       <Button variant="ghost" size="icon" onClick={onRemove} className="h-8 w-8 text-slate-300 hover:text-destructive hover:bg-destructive/5">
