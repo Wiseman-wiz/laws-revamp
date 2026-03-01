@@ -13,7 +13,7 @@ import {
   DragStartEvent,
   defaultDropAnimationSideEffects,
 } from "@dnd-kit/core";
-import { restrictToVerticalAxis, restrictToWindowEdges } from "@dnd-kit/modifiers";
+import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   SortableContext,
@@ -403,7 +403,7 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
               <DndContext
                 id="options-dnd"
                 sensors={sensors}
-                modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+                modifiers={[restrictToVerticalAxis, restrictToParentElement]}
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragEnd={handleOptionsDragEnd}
@@ -423,7 +423,8 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
                   </div>
                 </SortableContext>
                 <DragOverlay
-                  modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+                  modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+                  usePortal={false}
                   dropAnimation={{
                     sideEffects: defaultDropAnimationSideEffects({
                       styles: {
@@ -435,7 +436,7 @@ function FieldSettings({ field, onUpdate }: { field: CaseField, onUpdate: (updat
                   }}
                 >
                   {activeOption ? (
-                    <div className="bg-white border border-slate-200 rounded-md shadow-xl p-3 flex items-center gap-2 w-[calc(448px-48px)] max-w-full pointer-events-none">
+                    <div className="bg-white border border-slate-200 rounded-md shadow-xl p-2 flex items-center gap-2 w-full pointer-events-none">
                       <GripVertical className="h-4 w-4 text-slate-400" />
                       <div className="grid grid-cols-2 gap-2 flex-1">
                         <div className="h-9 px-3 flex items-center text-xs bg-slate-50 border rounded-md truncate">
