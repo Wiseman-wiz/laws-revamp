@@ -9,6 +9,9 @@ export default {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user
       const isOnLoginPage = nextUrl.pathname === "/login"
+      const isPublicPage = nextUrl.pathname === "/demo-table"
+
+      if (isPublicPage) return true
 
       if (!isLoggedIn && !isOnLoginPage) {
         return false // Redirect to login
